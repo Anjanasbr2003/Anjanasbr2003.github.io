@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Gallery Manager</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(255, 255, 255, 0.06);
+      --panel-2: rgba(255, 255, 255, 0.08);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --danger: #ef4444;
+      --border: rgba(255, 255, 255, 0.14);
+      --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(circle at 10% 10%, #1f2a44 0%, var(--bg) 48%, #05070f 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+    }
+
+    .sub {
+      margin: 0.3rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 0.6rem 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .2s ease, background .2s ease;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+    }
+    .btn:hover { background: var(--panel-2); }
+    .btn:active { transform: scale(0.98); }
+    .btn.primary {
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+    .btn.danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .row { display: grid; gap: .35rem; margin-bottom: .65rem; }
+    .label { font-size: .85rem; color: var(--muted); }
+    input {
+      width: 100%;
+      padding: .75rem .85rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      outline: none;
+    }
+    input:focus { border-color: rgba(59,130,246,.6); }
+
+    .actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .msg { font-size: .9rem; color: var(--muted); min-height: 1.2rem; }
+    .hint { color: var(--muted); font-size: .82rem; line-height: 1.6; }
+
+    .list { margin-top: 1rem; display: grid; gap: .7rem; }
+    .item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+      padding: .6rem;
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: .6rem;
+      align-items: center;
+    }
+    .thumb {
+      width: 72px; height: 52px; object-fit: cover; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+    }
+    .meta-title { font-size: .9rem; }
+    .meta-sub { font-size: .78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      .item { grid-template-columns: 62px 1fr; }
+      .item .btn { grid-column: 1 / -1; justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <div>
+        <h1 class="title">Gallery Admin Panel</h1>
+        <p class="sub">Manage photos shown on your portfolio gallery.</p>
+      </div>
+      <a href="anjana_sithum_portfolio.html#hero" class="btn">Back to Portfolio</a>
+    </div>
+
+    <div class="card">
+      <div id="auth-wrap">
+        <form id="login-form">
+          <div class="row">
+            <label class="label" for="username">Username</label>
+            <input id="username" type="text" value="Anjana" autocomplete="username" required>
+          </div>
+          <div class="row">
+            <label class="label" for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="actions">
+            <button class="btn primary" type="submit">Sign In</button>
+            <button class="btn" type="button" id="logout-btn" hidden>Sign Out</button>
+          </div>
+          <p class="msg" id="msg"></p>
+        </form>
+
+      </div>
+
+      <div id="panel" hidden>
+        <p class="sub" style="margin-top:0">Update skills/journey text shown on your portfolio.</p>
+
+        <div class="grid" style="margin-top:1rem;">
+          <form id="skills-content-form" class="card" style="padding:.9rem">
+            <strong>Skills Content</strong>
+            <div class="row">
+              <label class="label" for="skills-title">Section title</label>
+              <input id="skills-title" type="text" required>
+            </div>
+            <div class="row">
+              <label class="label" for="skills-subtitle">Section subtitle</label>
+              <input id="skills-subtitle" type="text" required>
+            </div>
+
+            <div id="skills-cards-container"></div>
+            <div class="actions">
+              <button class="btn" type="button" id="add-skill-card">+ Add Skills Card</button>
+            </div>
+
+            <p class="hint">Tip: Percent should be between 0 and 100.</p>
+            <div class="actions"><button class="btn primary" type="submit">Save Skills Content</button></div>
+          </form>
+
+          <form id="journey-content-form" class="card" style="padding:.9rem">
+            <strong>Journey Content</strong>
+            <div class="row">
+              <label class="label" for="journey-title">Journey title</label>
+              <input id="journey-title" type="text" required>
+            </div>
+            <div id="journey-items-container"></div>
+            <div class="actions">
+              <button class="btn" type="button" id="add-journey-item">+ Add Journey Item</button>
+            </div>
+            <div class="actions"><button class="btn primary" type="submit">Save Journey Content</button></div>
+          </form>
+        </div>
+
+        <div class="card" style="padding:.9rem; margin-top:1rem;">
+          <div class="actions" style="justify-content:space-between; align-items:center;">
+            <strong>Enquiries</strong>
+            <button class="btn" type="button" id="refresh-enquiries">Refresh</button>
+          </div>
+          <div id="enquiry-list" class="list" style="margin-top:.8rem;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      const ADMIN_USERNAME = 'Anjana';
+      const ADMIN_PASSWORD_FALLBACK = '123';
+      const FALLBACK_AUTH_KEY = 'admin_auth_fallback';
+      const SKILLS_KEY = 'content_skills_v1';
+      const JOURNEY_KEY = 'content_journey_v1';
+
+      const msg = document.getElementById('msg');
+      const panel = document.getElementById('panel');
+      const logoutBtn = document.getElementById('logout-btn');
+      const loginForm = document.getElementById('login-form');
+      const skillsForm = document.getElementById('skills-content-form');
+      const journeyForm = document.getElementById('journey-content-form');
+      const skillsTitle = document.getElementById('skills-title');
+      const skillsSubtitle = document.getElementById('skills-subtitle');
+      const journeyTitle = document.getElementById('journey-title');
+      const cardsContainer = document.getElementById('skills-cards-container');
+      const addSkillCardBtn = document.getElementById('add-skill-card');
+      const journeyItemsContainer = document.getElementById('journey-items-container');
+      const addJourneyItemBtn = document.getElementById('add-journey-item');
+      const enquiryList = document.getElementById('enquiry-list');
+      const refreshEnquiriesBtn = document.getElementById('refresh-enquiries');
+
+      const DEFAULT_SKILLS = {
+        title: "Skills & Technologies",
+        subtitle: "What I bring to the table",
+        cards: [
+          {
+            title: "Programming",
+            items: [
+              { name: "Python", percent: 85 },
+              { name: "JavaScript", percent: 78 },
+              { name: "Java", percent: 72 }
+            ]
+          },
+          {
+            title: "Web Development",
+            items: [
+              { name: "HTML/CSS", percent: 90 },
+              { name: "React", percent: 70 },
+              { name: "Node.js", percent: 65 }
+            ]
+          },
+          {
+            title: "Data & Systems",
+            items: [
+              { name: "SQL", percent: 80 },
+              { name: "Networking", percent: 75 },
+              { name: "Linux", percent: 68 }
+            ]
+          }
+        ]
+      };
+
+      const DEFAULT_JOURNEY = {
+        title: "My Story",
+        items: [
+          {
+            date: "January 2025 - Present",
+            title: "Faculty of Technology, University of Ruhuna",
+            sub: "Currently pursuing undergraduate studies in the software and technology domain, focused on practical computing, software development, and modern technical skills."
+          },
+          {
+            date: "Class of 2022",
+            title: "Therapuththa National School, Ambalantota",
+            sub: "Completed secondary education with the Class of 2022, building the academic foundation for higher studies in technology."
+          },
+          {
+            date: "Early Schooling",
+            title: "H/Karambagalmulla Junior School",
+            sub: "Completed early schooling and developed the discipline and learning mindset that now supports my technology career path."
+          }
+        ]
+      };
+
+      function setMsg(text, error) {
+        msg.textContent = text;
+        msg.style.color = error ? '#fca5a5' : 'var(--muted)';
+      }
+
+      function readJsonSafe(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' ? parsed : fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
+      function getValue(id) {
+        return (document.getElementById(id)?.value || '').trim();
+      }
+
+      function setValue(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.value = value ?? '';
+      }
+
+      function clampPercent(v) {
+        const n = Number(v);
+        if (Number.isNaN(n)) return 0;
+        return Math.max(0, Math.min(100, n));
+      }
+
+      async function loadEnquiries() {
+        if (!enquiryList) return;
+        if (!backendAuthAvailable) {
+          enquiryList.innerHTML = '<div class="meta-sub">Enquiries require PHP backend (run this site via localhost/server).</div>';
+          return;
+        }
+        enquiryList.innerHTML = '<div class="meta-sub">Loading enquiries...</div>';
+        try {
+          const res = await fetch('backend/get_enquiries.php', { credentials: 'same-origin' });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to load enquiries');
+
+          const items = Array.isArray(data.items) ? data.items : [];
+          if (!items.length) {
+            enquiryList.innerHTML = '<div class="meta-sub">No enquiries yet.</div>';
+            return;
+          }
+
+          enquiryList.innerHTML = '';
+          items.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = 'item';
+            row.style.gridTemplateColumns = '1fr';
+            const t1 = document.createElement('div');
+            t1.className = 'meta-title';
+            t1.innerHTML = '<strong></strong> (<span></span>)';
+            t1.querySelector('strong').textContent = item.full_name || '';
+            t1.querySelector('span').textContent = item.email || '';
+
+            const t2 = document.createElement('div');
+            t2.className = 'meta-sub';
+            t2.textContent = `${item.subject || ''} • ${item.created_at || ''}`;
+
+            const t3 = document.createElement('div');
+            t3.style.fontSize = '.9rem';
+            t3.style.lineHeight = '1.55';
+            t3.textContent = item.message || '';
+
+            row.appendChild(t1);
+            row.appendChild(t2);
+            row.appendChild(t3);
+            enquiryList.appendChild(row);
+          });
+        } catch (err) {
+          enquiryList.innerHTML = `<div class="meta-sub" style="color:#fca5a5;">${err.message || 'Could not load enquiries'}</div>`;
+        }
+      }
+
+      function buildSkillCardEditor(card, idx) {
+        const wrap = document.createElement('div');
+        wrap.className = 'card';
+        wrap.style.padding = '.75rem';
+        wrap.style.marginTop = '.8rem';
+        wrap.innerHTML = `
+          <div class="actions" style="justify-content:space-between; align-items:center;">
+            <label class="label" style="font-weight:700; color:var(--text);">Card ${idx + 1}</label>
+            <button class="btn danger skill-card-remove" type="button">Remove</button>
+          </div>
+          <div class="row"><input class="skill-card-title" type="text" placeholder="Card title"></div>
+          <div class="row"><input class="skill-item-name" type="text" placeholder="Skill 1 name"><input class="skill-item-percent" type="number" min="0" max="100" placeholder="Skill 1 %"></div>
+          <div class="row"><input class="skill-item-name" type="text" placeholder="Skill 2 name"><input class="skill-item-percent" type="number" min="0" max="100" placeholder="Skill 2 %"></div>
+          <div class="row"><input class="skill-item-name" type="text" placeholder="Skill 3 name"><input class="skill-item-percent" type="number" min="0" max="100" placeholder="Skill 3 %"></div>
+        `;
+        const titleEl = wrap.querySelector('.skill-card-title');
+        titleEl.value = card?.title || '';
+        const names = wrap.querySelectorAll('.skill-item-name');
+        const pcts = wrap.querySelectorAll('.skill-item-percent');
+        (card?.items || []).slice(0, 3).forEach((it, i) => {
+          names[i].value = it.name || '';
+          pcts[i].value = it.percent ?? '';
+        });
+        wrap.querySelector('.skill-card-remove').addEventListener('click', () => {
+          wrap.remove();
+          refreshSkillCardLabels();
+        });
+        cardsContainer.appendChild(wrap);
+      }
+
+      function refreshSkillCardLabels() {
+        Array.from(cardsContainer.children).forEach((el, i) => {
+          const lbl = el.querySelector('.label');
+          if (lbl) lbl.textContent = `Card ${i + 1}`;
+        });
+      }
+
+      function fillSkillsForm(data) {
+        setValue('skills-title', data.title);
+        setValue('skills-subtitle', data.subtitle);
+        if (!cardsContainer) return;
+        cardsContainer.innerHTML = '';
+        const cards = Array.isArray(data.cards) && data.cards.length ? data.cards : DEFAULT_SKILLS.cards;
+        cards.forEach((card, i) => buildSkillCardEditor(card, i));
+        refreshSkillCardLabels();
+      }
+
+      function fillJourneyForm(data) {
+        setValue('journey-title', data.title);
+        if (!journeyItemsContainer) return;
+        journeyItemsContainer.innerHTML = '';
+        const items = Array.isArray(data.items) && data.items.length ? data.items : DEFAULT_JOURNEY.items;
+        items.forEach((item, i) => buildJourneyItemEditor(item, i));
+        refreshJourneyItemLabels();
+      }
+
+      function buildJourneyItemEditor(item, idx) {
+        const wrap = document.createElement('div');
+        wrap.className = 'card';
+        wrap.style.padding = '.75rem';
+        wrap.style.marginTop = '.8rem';
+        wrap.innerHTML = `
+          <div class="actions" style="justify-content:space-between; align-items:center;">
+            <label class="label" style="font-weight:700; color:var(--text);">Journey Item ${idx + 1}</label>
+            <button class="btn danger journey-item-remove" type="button">Remove</button>
+          </div>
+          <div class="row"><input class="journey-item-date" type="text" placeholder="Date / range"></div>
+          <div class="row"><input class="journey-item-title" type="text" placeholder="Heading"></div>
+          <div class="row"><input class="journey-item-sub" type="text" placeholder="Description"></div>
+        `;
+
+        wrap.querySelector('.journey-item-date').value = item?.date || '';
+        wrap.querySelector('.journey-item-title').value = item?.title || '';
+        wrap.querySelector('.journey-item-sub').value = item?.sub || '';
+
+        wrap.querySelector('.journey-item-remove').addEventListener('click', () => {
+          wrap.remove();
+          refreshJourneyItemLabels();
+        });
+
+        journeyItemsContainer.appendChild(wrap);
+      }
+
+      function refreshJourneyItemLabels() {
+        if (!journeyItemsContainer) return;
+        Array.from(journeyItemsContainer.children).forEach((el, i) => {
+          const lbl = el.querySelector('.label');
+          if (lbl) lbl.textContent = `Journey Item ${i + 1}`;
+        });
+      }
+
+      let authed = false;
+      let backendAuthAvailable = true;
+      function isAuthed() { return authed; }
+
+      async function refreshAuthState() {
+        try {
+          const res = await fetch('backend/admin_auth.php?action=status', { credentials: 'same-origin' });
+          const data = await res.json();
+          backendAuthAvailable = true;
+          authed = !!(res.ok && data.ok && data.authed);
+        } catch {
+          backendAuthAvailable = false;
+          authed = sessionStorage.getItem(FALLBACK_AUTH_KEY) === '1';
+        }
+      }
+
+      function syncUi() {
+        panel.hidden = !authed;
+        logoutBtn.hidden = !authed;
+        if (authed) setMsg(backendAuthAvailable ? 'Signed in.' : 'Signed in (offline fallback mode).', false);
+        else setMsg('Signed out.', true);
+        if (authed) {
+          fillSkillsForm(readJsonSafe(SKILLS_KEY, DEFAULT_SKILLS));
+          fillJourneyForm(readJsonSafe(JOURNEY_KEY, DEFAULT_JOURNEY));
+          loadEnquiries();
+        }
+      }
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const u = (document.getElementById('username').value || '').trim();
+        const p = document.getElementById('password').value;
+        if (u !== ADMIN_USERNAME) return setMsg('Wrong username.', true);
+        if (!backendAuthAvailable) {
+          if (p !== ADMIN_PASSWORD_FALLBACK) return setMsg('Wrong password.', true);
+          authed = true;
+          sessionStorage.setItem(FALLBACK_AUTH_KEY, '1');
+          document.getElementById('password').value = '';
+          syncUi();
+          return;
+        }
+        try {
+          const fd = new FormData();
+          fd.append('action', 'login');
+          fd.append('username', u);
+          fd.append('password', p);
+          const res = await fetch('backend/admin_auth.php', {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin'
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Login failed');
+          authed = true;
+          document.getElementById('password').value = '';
+          syncUi();
+        } catch (err) {
+          authed = false;
+          setMsg(err.message || 'Login failed', true);
+          syncUi();
+        }
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        if (!backendAuthAvailable) {
+          sessionStorage.removeItem(FALLBACK_AUTH_KEY);
+          authed = false;
+          syncUi();
+          return;
+        }
+        try {
+          await fetch('backend/admin_auth.php?action=logout', { credentials: 'same-origin' });
+        } finally {
+          authed = false;
+          syncUi();
+        }
+      });
+
+      if (addSkillCardBtn) {
+        addSkillCardBtn.addEventListener('click', () => {
+          buildSkillCardEditor({ title: '', items: [{ name: '', percent: 0 }, { name: '', percent: 0 }, { name: '', percent: 0 }] }, cardsContainer.children.length);
+          refreshSkillCardLabels();
+        });
+      }
+
+      if (addJourneyItemBtn) {
+        addJourneyItemBtn.addEventListener('click', () => {
+          buildJourneyItemEditor({ date: '', title: '', sub: '' }, journeyItemsContainer ? journeyItemsContainer.children.length : 0);
+          refreshJourneyItemLabels();
+        });
+      }
+
+      if (refreshEnquiriesBtn) {
+        refreshEnquiriesBtn.addEventListener('click', () => {
+          if (!isAuthed()) return setMsg('Sign in first.', true);
+          loadEnquiries();
+        });
+      }
+
+      if (skillsForm) {
+        skillsForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!isAuthed()) return setMsg('Sign in first.', true);
+          const cards = Array.from(cardsContainer.children).map((cardEl, idx) => {
+            const title = cardEl.querySelector('.skill-card-title')?.value?.trim() || `Card ${idx + 1}`;
+            const names = cardEl.querySelectorAll('.skill-item-name');
+            const pcts = cardEl.querySelectorAll('.skill-item-percent');
+            return {
+              title,
+              items: [0, 1, 2].map((i) => ({
+                name: (names[i]?.value || '').trim() || `Skill ${i + 1}`,
+                percent: clampPercent(pcts[i]?.value || 0)
+              }))
+            };
+          }).filter(c => c.title);
+
+          const payload = {
+            title: skillsTitle?.value.trim() || DEFAULT_SKILLS.title,
+            subtitle: skillsSubtitle?.value.trim() || DEFAULT_SKILLS.subtitle,
+            cards: cards.length ? cards : DEFAULT_SKILLS.cards
+          };
+          localStorage.setItem(SKILLS_KEY, JSON.stringify(payload));
+          setMsg('Skills content saved.', false);
+        });
+      }
+
+      if (journeyForm) {
+        journeyForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!isAuthed()) return setMsg('Sign in first.', true);
+          const items = Array.from(journeyItemsContainer?.children || []).map((itemEl) => ({
+            date: (itemEl.querySelector('.journey-item-date')?.value || '').trim(),
+            title: (itemEl.querySelector('.journey-item-title')?.value || '').trim(),
+            sub: (itemEl.querySelector('.journey-item-sub')?.value || '').trim()
+          })).filter(item => item.date || item.title || item.sub);
+
+          const payload = {
+            title: journeyTitle?.value.trim() || DEFAULT_JOURNEY.title,
+            items: items.length ? items : DEFAULT_JOURNEY.items
+          };
+          localStorage.setItem(JOURNEY_KEY, JSON.stringify(payload));
+          setMsg('Journey content saved.', false);
+        });
+      }
+
+      document.getElementById('username').value = ADMIN_USERNAME;
+      document.getElementById('username').setAttribute('readonly', 'readonly');
+      await refreshAuthState();
+      syncUi();
+    })();
+  </script>
+</body>
+</html>
